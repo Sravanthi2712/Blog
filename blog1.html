@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MindWave Blog</title>
+  <style>
+    :root {
+      --bg: #fff;
+      --text: #222;
+      --accent: #007bff;
+    }
+
+    [data-theme="dark"] {
+      --bg: #121212;
+      --text: #e4e4e4;
+      --accent: #1e90ff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    header {
+      background: var(--accent);
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    .create-form input, .create-form textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    .create-form button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .create-form button:hover {
+      background: #0056b3;
+    }
+
+    .blog-list {
+      margin-top: 30px;
+    }
+
+    .post {
+      background: rgba(0,0,0,0.02);
+      margin-bottom: 20px;
+      padding: 15px;
+      border-left: 5px solid var(--accent);
+      border-radius: 6px;
+    }
+
+    .post h3 {
+      margin-top: 0;
+    }
+
+    .post small {
+      color: gray;
+    }
+
+    .post img {
+      max-width: 100%;
+      border-radius: 6px;
+      margin-top: 10px;
+      loading: lazy;
+    }
+
+    .dark-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--accent);
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    #search {
+      width: 100%;
+      padding: 10px;
+      margin: 20px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    @media (max-width: 600px) {
+      .post {
+        font-size: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🧠 MindWave Blog</h1>
+    <p>Where ideas come alive...</p>
+  </header>
+
+  <button class="dark-toggle" onclick="toggleTheme()">🌗 Toggle Theme</button>
+
+  <main class="container">
+    <section class="create-form">
+      <h2>Create a New Post</h2>
+      <input type="text" id="title" placeholder="Post Title" />
+      <textarea id="content" rows="4" placeholder="Write your thoughts..."></textarea>
+      <input type="text" id="image" placeholder="Image URL (optional)" />
+      <button onclick="addPost()">Publish Post</button>
+    </section>
+
+    <input type="text" id="search" placeholder="🔍 Search posts..." onkeyup="searchPosts()" />
+
+    <section class="blog-list" id="blogList">
+      <!-- Blog posts go here -->
+    </section>
+  </main>
+
+  <script>
+    const blogList = document.getElementById("blogList");
+    const theme = localStorage.getItem("theme");
+    if (theme === "dark") document.documentElement.setAttribute("data-theme", "dark");
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute("data-theme");
+      if (current === "dark") {
+        document.documentElement.removeAttribute("data-theme");
+        localStorage.setItem("theme", "light");
+      } else {
+        document.documentElement.setAttribute("data-theme", "dark");
+        localStorage.setItem("theme", "dark");
+      }
+    }
+
+    function getPosts() {
+      return JSON.parse(localStorage.getItem("posts")) || [];
+    }
+
+    function savePosts(posts) {
+      localStorage.setItem("posts", JSON.stringify(posts));
+    }
+
+    function addPost() {
+      const title = document.getElementById("title").value.trim();
+      const content = document.getElementById("content").value.trim();
+      const image = document.getElementById("image").value.trim();
+      if (!title || !content) return alert("Title and content required!");
+
+      const post = {
+        id: Date.now(),
+        title,
+        content,
+        image,
+        date: new Date().toLocaleString()
+      };
+
+      const posts = getPosts();
+      posts.unshift(post);
+      savePosts(posts);
+      document.getElementById("title").value = "";
+      document.getElementById("content").value = "";
+      document.getElementById("image").value = "";
+      renderPosts();
+    }
+
+    function renderPosts() {
+      const posts = getPosts();
+      blogList.innerHTML = "";
+
+      if (posts.length === 0) {
+        blogList.innerHTML = "<p>No blog posts yet. Start writing!</p>";
+        return;
+      }
+
+      posts.forEach(post => {
+        const div = document.createElement("div");
+        div.className = "post";
+        div.innerHTML = `
+          <h3>${post.title}</h3>
+          <small>📅 ${post.date}</small>
+          <p>${post.content}</p>
+          ${post.image ? `<img src="${post.image}" alt="blog image" loading="lazy" />` : ""}
+        `;
+        blogList.appendChild(div);
+      });
+    }
+
+    function searchPosts() {
+      const query = document.getElementById("search").value.toLowerCase();
+      const posts = document.querySelectorAll(".post");
+      posts.forEach(post => {
+        const text = post.innerText.toLowerCase();
+        post.style.display = text.includes(query) ? "block" : "none";
+      });
+    }
+
+    renderPosts();
+  </script>
+</body>
+</html>
